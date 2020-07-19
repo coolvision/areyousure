@@ -86,7 +86,7 @@ Add listeners so we know when to dismiss the dialog.
     button = dialog.querySelector 'button'
     text = dialog.querySelector 'text'
 
-    chrome.storage.sync.get {holdTime: 2, backdropOpacity: 0.8}, (opts) ->
+    chrome.storage.sync.get {holdTime: 0.5, backdropOpacity: 0.8}, (opts) ->
       setStyles opts
 
       start = (ev) ->

@@ -13,7 +13,7 @@ Just load and unload the sites from a simple textarea-backed list. The sites
 are actually stored in full Chrome event filter syntax so we can make this
 more complicated if we want to later.
 
-    storage.get {sites: [], holdTime: 2, cooldown: 5, backdropOpacity: 0.8}, catchError (opts) ->
+    storage.get {sites: [], holdTime: 0.5, cooldown: 5, backdropOpacity: 0.8}, catchError (opts) ->
       $('#sites').value = (site.hostSuffix for site in opts.sites).join('\n')
       $('#holdTime').value = opts.holdTime
       $('#cooldown').value = opts.cooldown

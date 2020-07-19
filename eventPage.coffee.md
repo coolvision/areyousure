@@ -1,8 +1,10 @@
     DEFAULT_SITES = [
-      { hostSuffix: "reddit.com" }
-      { hostSuffix: "news.ycombinator.com" }
-      { hostSuffix: "facebook.com" }
-      { hostSuffix: "twitter.com" }
+      # { hostSuffix: "reddit.com" }
+      # { hostSuffix: "reddit.com" }
+      # { hostSuffix: "news.ycombinator.com" }
+      # { hostSuffix: "facebook.com" }
+      # { hostSuffix: "github.com" }
+      { urlMatches: ".*" } 
     ]
     storage = chrome.storage.sync
     filter = url: DEFAULT_SITES
@@ -14,6 +16,7 @@ navigate and is where we inject the content script. At this point filtering
 has already happened so we must be on one of the sites in our filter list.
 
     listener = (ev) ->
+      console.log("listener", ev)
       return if ev.frameId > 0
 
       chrome.tabs.executeScript ev.tabId, file: "content.js", runAt: "document_start"
@@ -21,9 +24,11 @@ has already happened so we must be on one of the sites in our filter list.
     tabReplacedListener = (ev) ->
       chrome.tabs.get ev.tabId, (tab) ->
         domain = urlRegex.exec(tab.url)?[4]
+        console.log(domain)
         return unless domain
-        for site in filter.url
-          return listener(ev) if domain.match new RegExp site.hostSuffix + '$'
+        return listener(ev)
+        # for site in filter.url
+          # return listener(ev) if domain.match new RegExp site.hostSuffix + '$'
 
 Listen and unlisten methods. This API is very efficient, and does all the
 filtering on Chrome-side without even loading our code.
@@ -31,6 +36,7 @@ filtering on Chrome-side without even loading our code.
     listen = ->
       chrome.alarms.clearAll()
       chrome.webNavigation.onCommitted.addListener listener, filter
+      # chrome.webNavigation.onCommitted.addListener listener
       chrome.webNavigation.onTabReplaced.addListener tabReplacedListener
       chrome.runtime.onMessage.addListener msgListener
 
@@ -47,7 +53,8 @@ appear) and set an alarm to turn them back on after a configurable cooldown.
     msgListener = (msg) ->
       return unless msg is "clicked"
       unlisten()
-      chrome.alarms.create delayInMinutes: cooldown
+      listen()
+      # chrome.alarms.create delayInMinutes: cooldown
 
 
 Reload the stored sites from Chrome's synchronised storage. We just bail on
@@ -56,8 +63,9 @@ errors here because there's not much we can realistically do about them.
     reload = ->
       storage.get ['sites', 'cooldown'], (result) ->
         return unless result
-        filter = url: result.sites if Array.isArray result.sites
+        # filter = url: result.sites if Array.isArray result.sites
         cooldown = result.cooldown if result.cooldown
+        # console.log("reload", filter, cooldown)
         unlisten()
         listen()
 
