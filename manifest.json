@@ -26,7 +26,11 @@
     "webNavigation",
     "alarms",
     "tabs",
-    "storage"
+    "storage",
+    "notifications",
+    "http://*/",
+    "https://*/",
+    "activeTab"
   ],
 
   "web_accessible_resources": [

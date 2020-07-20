@@ -1,13 +1,12 @@
     DEFAULT_SITES = [
-      # { hostSuffix: "reddit.com" }
-      # { hostSuffix: "reddit.com" }
-      # { hostSuffix: "news.ycombinator.com" }
-      # { hostSuffix: "facebook.com" }
-      # { hostSuffix: "github.com" }
-      { urlMatches: ".*" } 
+      { hostSuffix: "notion.so" }
     ]
+    ALL_SITES = [
+      { urlMatches: ".*" } 
+    ]    
     storage = chrome.storage.sync
     filter = url: DEFAULT_SITES
+    filter_all = url: ALL_SITES
     cooldown = 5
     urlRegex = /^(([^:\/?#]+):)?(\/\/([^\/:?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/
 
@@ -18,8 +17,14 @@ has already happened so we must be on one of the sites in our filter list.
     listener = (ev) ->
       console.log("listener", ev)
       return if ev.frameId > 0
-
-      chrome.tabs.executeScript ev.tabId, file: "content.js", runAt: "document_start"
+      if not ev.url.includes("http")
+        return
+      console.log("check", filter.url)
+      for site in filter.url
+        if ev.url.includes(site.hostSuffix)
+            console.log("whitelisted", ev)
+            return
+      chrome.tabs.executeScript ev.tabId, file: "content.js", runAt: "document_start", matchAboutBlank: true
 
     tabReplacedListener = (ev) ->
       chrome.tabs.get ev.tabId, (tab) ->
@@ -35,7 +40,7 @@ filtering on Chrome-side without even loading our code.
 
     listen = ->
       chrome.alarms.clearAll()
-      chrome.webNavigation.onCommitted.addListener listener, filter
+      chrome.webNavigation.onCommitted.addListener listener, filter_all
       # chrome.webNavigation.onCommitted.addListener listener
       chrome.webNavigation.onTabReplaced.addListener tabReplacedListener
       chrome.runtime.onMessage.addListener msgListener
@@ -63,9 +68,9 @@ errors here because there's not much we can realistically do about them.
     reload = ->
       storage.get ['sites', 'cooldown'], (result) ->
         return unless result
-        # filter = url: result.sites if Array.isArray result.sites
+        filter = url: result.sites if Array.isArray result.sites
         cooldown = result.cooldown if result.cooldown
-        # console.log("reload", filter, cooldown)
+        console.log("reload", filter, cooldown)
         unlisten()
         listen()
 
